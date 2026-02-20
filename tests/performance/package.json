@@ -1,0 +1,22 @@
+{
+  "name": "doctrust-performance-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "k6 performance tests for DocuTrust Vault",
+  "scripts": {
+    "test": "k6 run smoke/smoke.js",
+    "smoke": "k6 run smoke/smoke.js",
+    "baseline": "k6 run baseline/baseline.js",
+    "load": "k6 run load/load.js",
+    "stress": "k6 run stress/stress.js",
+    "spike": "k6 run spike/spike.js",
+    "breakpoint": "k6 run breakpoint/breakpoint.js",
+    "soak": "k6 run soak/soak.js",
+    "all": "npm run smoke && npm run baseline && npm run load",
+    "run": "./run.sh"
+  },
+  "keywords": ["k6", "performance", "load-testing", "doctrust"],
+  "engines": {
+    "node": ">=20"
+  }
+}

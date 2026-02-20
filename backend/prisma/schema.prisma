@@ -1,0 +1,180 @@
+// DocuTrust Vault – per docs/DocuTrust_Vault_ TDD.md
+// Company-based multi-tenancy, document integrity, audit trail
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Company (tenant) ---
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Company {
+  id                   String   @id @default(uuid())
+  companyName          String   @map("company_name")
+  status               CompanyStatus @default(ACTIVE)
+  retentionPolicyDays  Int      @map("retention_policy_days") @default(2555) // ~7 years US Federal
+  legalJurisdiction    String   @map("legal_jurisdiction") @default("US Federal")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  users    User[]
+  documents Document[]
+
+  @@map("companies")
+}
+
+// --- User ---
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum PreferredLanguage {
+  EN
+  ES
+  FR
+  SR_LAT
+  SR_CYR
+}
+
+model User {
+  id                String           @id @default(uuid())
+  companyId         String           @map("company_id")
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email             String           @unique
+  firstName         String           @map("first_name")
+  lastName          String           @map("last_name")
+  passwordHash      String           @map("password_hash")
+  role              UserRole         @default(USER)
+  status            UserStatus       @default(ACTIVE)
+  preferredLanguage PreferredLanguage @map("preferred_language") @default(EN)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  createdBy         String?          @map("created_by")
+  lastLoginAt       DateTime?        @map("last_login_at")
+  logicalDeleted    Boolean          @default(false) @map("logical_deleted")
+  logicalDeletedAt  DateTime?        @map("logical_deleted_at")
+
+  documentsUploaded   Document[]     @relation("DocumentUploader")
+  documentsModified   Document[]     @relation("DocumentModifier")
+  auditLogs           AuditLog[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([companyId])
+  @@index([email])
+  @@index([status])
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+// --- Document ---
+enum HashStatus {
+  VALID
+  MISSING
+  REMOVED
+  SYSTEM
+}
+
+enum AuditStatus {
+  COMPLIANT
+  REVIEW
+  NON_COMPLIANT
+}
+
+model Document {
+  id                  String     @id @default(uuid())
+  companyId           String     @map("company_id")
+  company             Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  originalFileName    String     @map("original_file_name")
+  currentFileName     String     @map("current_file_name")
+  fileType            String     @map("file_type") // PDF, DOCX
+  fileSize            BigInt     @map("file_size")
+  storagePath         String     @map("storage_path") // path in object storage / uploads
+  createdAt           DateTime   @default(now()) @map("created_at")
+  createdByUser       String?    @map("created_by_user")
+  creationTool        String?    @map("creation_tool")
+  uploadedAt          DateTime   @default(now()) @map("uploaded_at")
+  uploadedByUser      String     @map("uploaded_by_user")
+  uploadedBy          User       @relation("DocumentUploader", fields: [uploadedByUser], references: [id], onDelete: Restrict)
+  initialHash         String     @map("initial_hash")
+  hashAlgorithm       String     @map("hash_algorithm") @default("SHA-256")
+  hashStatus          HashStatus @default(VALID)
+  contentModified     Boolean    @default(false) @map("content_modified")
+  renameOnly          Boolean    @default(false) @map("rename_only")
+  lastModifiedAt      DateTime?  @map("last_modified_at")
+  modifiedByUser      String?    @map("modified_by_user")
+  modifiedBy          User?      @relation("DocumentModifier", fields: [modifiedByUser], references: [id], onDelete: SetNull)
+  modificationTool    String?    @map("modification_tool")
+  sentExternally      Boolean    @default(false) @map("sent_externally")
+  sentVia             String?    // EMAIL | VIBER
+  sentVersionHash     String?    @map("sent_version_hash")
+  legalHold           Boolean    @default(false) @map("legal_hold")
+  logicalDeleted      Boolean    @default(false) @map("logical_deleted")
+  logicalDeletedAt    DateTime?  @map("logical_deleted_at")
+  retentionExpiryDate DateTime?  @map("retention_expiry_date")
+  auditStatus         AuditStatus @default(COMPLIANT) @map("audit_status")
+
+  auditLogs AuditLog[]
+
+  @@index([companyId])
+  @@index([uploadedByUser])
+  @@index([logicalDeleted])
+  @@index([hashStatus])
+  @@map("documents")
+}
+
+// --- Audit Log (immutable) ---
+enum AuditAction {
+  UPLOAD
+  RENAME
+  MODIFY
+  SEND
+  DELETE
+}
+
+enum AuditChannel {
+  EMAIL
+  VIBER
+}
+
+model AuditLog {
+  id           String       @id @default(uuid())
+  documentId   String       @map("document_id")
+  document     Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  action       AuditAction
+  performedBy  String       @map("performed_by")
+  performer    User         @relation(fields: [performedBy], references: [id], onDelete: Restrict)
+  performedAt  DateTime     @default(now()) @map("performed_at")
+  previousHash String?      @map("previous_hash")
+  newHash      String?      @map("new_hash")
+  channel      AuditChannel?
+  notes        String?
+
+  @@index([documentId])
+  @@index([performedAt])
+  @@map("audit_logs")
+}

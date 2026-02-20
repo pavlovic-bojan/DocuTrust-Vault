@@ -1,0 +1,20 @@
+{
+  "name": "doctrust-vault",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DocuTrust Vault – Document Integrity & Compliance Management",
+  "scripts": {
+    "backend:dev": "npm run dev -w backend",
+    "backend:build": "npm run build -w backend",
+    "backend:test": "npm run test -w backend",
+    "frontend:dev": "npm run dev -w frontend",
+    "frontend:build": "npm run build -w frontend",
+    "db:seed": "npm run db:seed -w backend",
+    "tests:api": "cd tests/e2e && npm run test:api",
+    "tests:e2e": "cd tests/e2e && npm run test:e2e",
+    "tests:performance": "cd tests/performance && npm run smoke"
+  },
+  "workspaces": ["backend", "frontend"],
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}

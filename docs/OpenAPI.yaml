@@ -1,0 +1,733 @@
+openapi: 3.1.0
+info:
+  title: DocuTrust Vault API
+  version: 1.0.0
+  description: |
+    API for DocuTrust Vault – secure document management system ensuring integrity,
+    compliance, and auditability under U.S. Federal regulations.
+
+    **Features:**
+    - Document upload with cryptographic hash (SHA-256)
+    - Rename vs content-modification detection
+    - External distribution (Email, Viber)
+    - Immutable audit trail
+    - Role-based access (Admin / User)
+
+servers:
+  - url: https://api.doctrustvault.com/api/v1
+    description: Production server
+  - url: http://localhost:4000/api/v1
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Authentication and session management
+  - name: Users
+    description: User management (Admin only)
+  - name: Documents
+    description: Document lifecycle management
+  - name: Report Bug
+    description: Bug report submission
+  - name: Audit
+    description: Audit trail and compliance
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, USER]
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DELETED]
+        preferredLanguage:
+          type: string
+          enum: [EN, ES, FR, SR_LAT, SR_CYR]
+        createdAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time
+      required:
+        - userId
+        - companyId
+        - email
+        - role
+
+    Document:
+      type: object
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        originalFileName:
+          type: string
+        currentFileName:
+          type: string
+        fileType:
+          type: string
+          enum: [PDF, DOCX]
+        fileSize:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        createdByUser:
+          type: string
+          format: uuid
+        uploadedAt:
+          type: string
+          format: date-time
+        uploadedByUser:
+          type: string
+          format: uuid
+        initialHash:
+          type: string
+        hashAlgorithm:
+          type: string
+          example: SHA-256
+        hashStatus:
+          type: string
+          enum: [VALID, MISSING, REMOVED, SYSTEM]
+        contentModified:
+          type: boolean
+        renameOnly:
+          type: boolean
+        lastModifiedAt:
+          type: string
+          format: date-time
+        modificationTool:
+          type: string
+        sentExternally:
+          type: boolean
+        sentVia:
+          type: string
+          enum: [EMAIL, VIBER]
+        legalHold:
+          type: boolean
+        logicalDeleted:
+          type: boolean
+        logicalDeletedAt:
+          type: string
+          format: date-time
+        retentionExpiryDate:
+          type: string
+          format: date
+        auditStatus:
+          type: string
+          enum: [COMPLIANT, REVIEW, NON_COMPLIANT]
+      required:
+        - documentId
+        - companyId
+        - currentFileName
+        - fileType
+        - hashStatus
+
+    AuditLogEntry:
+      type: object
+      properties:
+        auditId:
+          type: string
+          format: uuid
+        documentId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [UPLOAD, RENAME, MODIFY, SEND, DELETE]
+        performedBy:
+          type: string
+          format: uuid
+        performedAt:
+          type: string
+          format: date-time
+        previousHash:
+          type: string
+        newHash:
+          type: string
+        channel:
+          type: string
+          enum: [EMAIL, VIBER]
+        notes:
+          type: string
+      required:
+        - auditId
+        - documentId
+        - action
+        - performedBy
+        - performedAt
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        expiresAt:
+          type: string
+          format: date-time
+
+    DocumentUploadResponse:
+      type: object
+      properties:
+        document:
+          $ref: '#/components/schemas/Document'
+        message:
+          type: string
+          example: Document uploaded successfully. Hash validated.
+
+    SendDocumentRequest:
+      type: object
+      properties:
+        channel:
+          type: string
+          enum: [EMAIL, VIBER]
+          description: Distribution channel
+        recipient:
+          type: string
+          description: Email address or Viber ID
+      required:
+        - channel
+        - recipient
+
+    SendDocumentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        auditId:
+          type: string
+          format: uuid
+
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, USER]
+        preferredLanguage:
+          type: string
+          enum: [EN, ES, FR, SR_LAT, SR_CYR]
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - role
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [ADMIN, USER]
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DELETED]
+        preferredLanguage:
+          type: string
+          enum: [EN, ES, FR, SR_LAT, SR_CYR]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+security:
+  - BearerAuth: []
+  - SessionAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: Request password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+                - email
+      responses:
+        '200':
+          description: If account exists, reset link sent. Always returns success for security.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: End session
+      responses:
+        '200':
+          description: Logged out
+        '401':
+          description: Unauthorized
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+    patch:
+      tags:
+        - Auth
+      summary: Update own profile (firstName, lastName, email, preferredLanguage)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                preferredLanguage:
+                  type: string
+                  enum: [EN, ES, FR, SR_LAT, SR_CYR]
+      responses:
+        '200':
+          description: Profile updated
+        '400':
+          description: Validation error or email already in use
+        '401':
+          description: Unauthorized
+
+  /report-bug:
+    post:
+      tags:
+        - Report Bug
+      summary: Submit bug report (sends email to admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                description:
+                  type: string
+              required:
+                - subject
+                - description
+      responses:
+        '200':
+          description: Bug report sent
+        '400':
+          description: Validation error
+        '503':
+          description: Bug report not configured or send failed
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List all users (Admin only)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, SUSPENDED, DELETED]
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [ADMIN, USER]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden – Admin role required
+
+    post:
+      tags:
+        - Users
+      summary: Create user (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error or email already exists
+        '403':
+          description: Forbidden – Admin role required
+
+  /users/{userId}:
+    patch:
+      tags:
+        - Users
+      summary: Update user (Admin only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+
+    delete:
+      tags:
+        - Users
+      summary: Logical delete user (Admin only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User logically deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+
+  /documents:
+    post:
+      tags:
+        - Documents
+      summary: Upload document
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                creationTool:
+                  type: string
+                  description: Tool used to create document
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUploadResponse'
+        '400':
+          description: Invalid file type or format
+        '413':
+          description: File too large
+
+    get:
+      tags:
+        - Documents
+      summary: List documents
+      description: |
+        Admin: returns all documents in company.
+        User: returns only own documents.
+      parameters:
+        - name: logicalDeleted
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: hashStatus
+          in: query
+          schema:
+            type: string
+            enum: [VALID, MISSING, REMOVED, SYSTEM]
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /documents/{documentId}:
+    get:
+      tags:
+        - Documents
+      summary: Get document metadata
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '403':
+          description: Access denied
+        '404':
+          description: Document not found
+
+    delete:
+      tags:
+        - Documents
+      summary: Logical delete document
+      description: User can delete only own documents. Admin can delete any.
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Document logically deleted
+        '403':
+          description: Access denied
+        '404':
+          description: Document not found
+
+  /documents/{documentId}/download:
+    get:
+      tags:
+        - Documents
+      summary: Download document file
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document file (binary)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Access denied
+        '404':
+          description: Document not found
+
+  /documents/{documentId}/send:
+    post:
+      tags:
+        - Documents
+      summary: Send document externally
+      description: Distribute document via Email or Viber. Logs recipient, channel, timestamp, and hash.
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendDocumentRequest'
+      responses:
+        '200':
+          description: Document sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendDocumentResponse'
+        '400':
+          description: Invalid channel or recipient
+        '403':
+          description: Access denied
+        '404':
+          description: Document not found
+
+  /documents/{documentId}/audit:
+    get:
+      tags:
+        - Audit
+      summary: Get audit trail for document
+      description: Immutable list of all actions (UPLOAD, RENAME, MODIFY, SEND, DELETE).
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+        '403':
+          description: Access denied
+        '404':
+          description: Document not found
