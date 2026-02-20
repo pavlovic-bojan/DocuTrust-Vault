@@ -26,8 +26,6 @@ tags:
     description: User management (Admin only)
   - name: Documents
     description: Document lifecycle management
-  - name: Report Bug
-    description: Bug report submission
   - name: Audit
     description: Audit trail and compliance
 
@@ -413,33 +411,6 @@ paths:
           description: Validation error or email already in use
         '401':
           description: Unauthorized
-
-  /report-bug:
-    post:
-      tags:
-        - Report Bug
-      summary: Submit bug report (sends email to admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                subject:
-                  type: string
-                description:
-                  type: string
-              required:
-                - subject
-                - description
-      responses:
-        '200':
-          description: Bug report sent
-        '400':
-          description: Validation error
-        '503':
-          description: Bug report not configured or send failed
 
   /users:
     get:

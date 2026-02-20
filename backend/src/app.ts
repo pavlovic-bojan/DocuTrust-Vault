@@ -14,7 +14,6 @@ import { errorHandler } from './middleware/errorHandler.js';
 import authRoutes from './interfaces/http/auth.routes.js';
 import userRoutes from './interfaces/http/user.routes.js';
 import documentRoutes from './interfaces/http/document.routes.js';
-import reportBugRoutes from './interfaces/http/report-bug.routes.js';
 import { env } from './config/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -36,7 +35,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/documents', documentRoutes);
-app.use('/api/v1/report-bug', reportBugRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
