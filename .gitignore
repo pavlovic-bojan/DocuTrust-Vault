@@ -52,6 +52,7 @@ Thumbs.db
 # Test results
 test-results/
 playwright-report/
+tests/performance/k6-report/
 coverage/
 .nyc_output/
 allure-results/

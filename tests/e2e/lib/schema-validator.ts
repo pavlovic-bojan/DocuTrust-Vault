@@ -63,37 +63,4 @@ export const schemas = {
       },
     },
   },
-  tenantsList: {
-    type: 'object',
-    required: ['data'],
-    properties: {
-      data: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            name: { type: 'string' },
-            code: { type: 'string' },
-            isActive: { type: 'boolean' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    },
-  },
-  genericDataArray: {
-    type: 'object',
-    properties: {
-      data: { type: 'array' },
-    },
-  },
-  genericDataObject: {
-    type: 'object',
-    properties: {
-      data: {},
-    },
-  },
-  emptyBody: {},
 } as const;
