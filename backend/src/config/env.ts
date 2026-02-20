@@ -22,4 +22,10 @@ export const env = {
   SESSION_SECRET: optional('SESSION_SECRET', 'session-secret-change-in-production'),
   UPLOAD_DIR: optional('UPLOAD_DIR', 'uploads'),
   DEV_AUTH_SECRET: optional('DEV_AUTH_SECRET', ''),
+  BUG_REPORT_EMAIL: optional('BUG_REPORT_EMAIL', ''),
+  SMTP_HOST: optional('SMTP_HOST', ''),
+  SMTP_PORT: parseInt(optional('SMTP_PORT', '587'), 10),
+  SMTP_SECURE: optional('SMTP_SECURE', 'false') === 'true',
+  SMTP_USER: optional('SMTP_USER', ''),
+  SMTP_PASS: optional('SMTP_PASS', ''),
 } as const;

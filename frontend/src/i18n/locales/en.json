@@ -134,6 +134,7 @@
     "description": "Description",
     "subjectPlaceholder": "Brief description of the issue",
     "descriptionPlaceholder": "Detailed steps to reproduce...",
+    "descriptionHint": "Include steps to reproduce, expected vs actual behavior, and any error messages.",
     "submitReport": "Submit Report",
     "sending": "Sending...",
     "success": "Thank you for your report. We will look into it.",

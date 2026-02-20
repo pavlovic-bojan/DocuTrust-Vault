@@ -136,6 +136,7 @@
     "description": "Opis",
     "subjectPlaceholder": "Kratak opis problema",
     "descriptionPlaceholder": "Detaljni koraci za reprodukciju...",
+    "descriptionHint": "Uključite korake za reprodukciju, očekivano vs stvarno ponašanje i poruke o greškama.",
     "submitReport": "Pošalji prijavu",
     "sending": "Slanje...",
     "success": "Hvala na prijavi. Pregledaćemo je.",

@@ -5,6 +5,8 @@ import { LoginPage } from '@/pages/LoginPage';
 import { MainLayout } from '@/layouts/MainLayout';
 import { UsersPage } from '@/pages/UsersPage';
 import { DocumentsPage } from '@/pages/DocumentsPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { ReportBugPage } from '@/pages/ReportBugPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -34,6 +36,8 @@ function AppRoutes() {
         <Route index element={<HomeRedirect />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="documents" element={<DocumentsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="report-bug" element={<ReportBugPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

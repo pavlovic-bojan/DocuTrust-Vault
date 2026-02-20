@@ -136,6 +136,7 @@
     "description": "Descripción",
     "subjectPlaceholder": "Breve descripción del problema",
     "descriptionPlaceholder": "Pasos detallados para reproducir...",
+    "descriptionHint": "Incluya pasos para reproducir, comportamiento esperado vs real y mensajes de error.",
     "submitReport": "Enviar reporte",
     "sending": "Enviando...",
     "success": "Gracias por tu reporte. Lo revisaremos.",
