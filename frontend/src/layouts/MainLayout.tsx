@@ -69,13 +69,6 @@ export function MainLayout() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </div>
-            <DropdownMenuItem asChild>
-              <Link to="/profile">{t('layout.profile')}</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/report-bug">{t('layout.reportBug')}</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleLogout} className="text-red-600 focus:text-red-600">
               {t('layout.logout')}
             </DropdownMenuItem>
